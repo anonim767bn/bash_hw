@@ -1,5 +1,8 @@
 #!/bin/bash
 defects=0
+delete=0
+create=0
+
 dir=$1
 serviceFile=".heshes"
 
@@ -30,7 +33,7 @@ do
     if [[ ! -f $dir/$fileName ]]
     then
         echo "файл $fileName не найден"
-        defects=$(($defects+1))
+        delete=$(($delete+1))
         continue
     fi
     shaSum="$(sha256sum $dir/$fileName | awk '{print $1}')"
@@ -41,11 +44,13 @@ do
     fi
 done < $dir/$serviceFile
 
-if [[ $defects -eq 0 ]]
+create=$((`wc -l < $dir/$serviceFile`-`ls -1 | wc -l`))
+
+if [[ $defects -eq 0 && create -eq 0 ]]
 then
     echo "проверка прошла успешно файлы не были изменены"
     exit 0
 else
-    echo "проверка провалена $defects файла(ов) было изменено либо удалено"
+    echo "проверка провалена $defects файла(ов) было изменено, $delete файла(ов) удалено и $create новых файлов создано"
     exit 3
 fi
